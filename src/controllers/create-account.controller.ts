@@ -1,4 +1,5 @@
 import {BadRequestException, Body, ConflictException, Controller, HttpCode, Post} from "@nestjs/common";
+import {hash} from "bcryptjs";
 import {IUser} from "src/interfaces/user.model";
 import {PrismaService} from "src/prisma/prisma.service";
 
@@ -25,11 +26,13 @@ export class CreateAccountController {
       )
     }
 
+    const hashPassword = await hash(password, 8)
+
     await this.prisma.user.create({
       data: {
         name, 
         email, 
-        password
+        password: hashPassword
       }
     })
   }
