@@ -1,7 +1,16 @@
-import {BadRequestException, Body, ConflictException, Controller, HttpCode, Post} from "@nestjs/common";
+import {Body, ConflictException, Controller, HttpCode, Post, UsePipes} from "@nestjs/common";
 import {hash} from "bcryptjs";
-import {IUser} from "src/interfaces/user.model";
+import {ZodValidationPipe} from "src/pipes/zod-validation.pipe";
 import {PrismaService} from "src/prisma/prisma.service";
+import {z} from "zod";
+
+const createAccountBodySchema = z.object({
+  name: z.string(),
+  email: z.string().email(),
+  password: z.string()
+})
+
+type CreateAccountBodySchema = z.infer<typeof createAccountBodySchema>
 
 @Controller("/accounts")
 export class CreateAccountController {
@@ -9,12 +18,9 @@ export class CreateAccountController {
   
   @Post()
   @HttpCode(201)
-  async handle(@Body() body: IUser) {
+  @UsePipes(new ZodValidationPipe(createAccountBodySchema))
+  async handle(@Body() body: CreateAccountBodySchema) {
     const {name, email, password} = body
-
-    if (!name || !email || !password) {
-      throw new BadRequestException("All fields are required.")
-    }
 
     const userWithSameEmail = await this.prisma.user.findFirst({
       where: {email}
