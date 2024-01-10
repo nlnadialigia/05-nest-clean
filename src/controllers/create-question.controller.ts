@@ -4,6 +4,7 @@ import {JwtAuthGuard} from "src/auth/jwt-auth.guard";
 import {UserPayload} from "src/auth/jwt.strategy";
 import {ZodValidationPipe} from "src/pipes/zod-validation.pipe";
 import {PrismaService} from "src/prisma/prisma.service";
+import {RandomTextService} from "src/utils/generate.slug";
 import {z} from "zod";
 
 const createQuestionBodySchema = z.object({
@@ -18,7 +19,10 @@ type CreateQuestionBodySchema = z.infer<typeof createQuestionBodySchema>
 @Controller("/questions")
 @UseGuards(JwtAuthGuard)
 export class CreateQuestionController {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private randomSlug: RandomTextService
+  ) {}
   
   @Post()
   async handle(
@@ -33,7 +37,7 @@ export class CreateQuestionController {
       data: {
         content, 
         title, 
-        slug: "asd",
+        slug: this.randomSlug.generateRandomText(),
         authorId
       }
     })
